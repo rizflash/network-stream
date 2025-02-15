@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ultimate Video Player</title>
+  <!-- CSS Plyr dan Custom CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <h2>Network Stream - rizflash</h2>
+    <h2>Ultimate Video Player</h2>
     <input type="text" id="video-url" placeholder="Masukkan URL video/stream...">
     <button id="load-stream">Load Stream</button>
     
@@ -21,11 +22,14 @@
     <input type="file" id="upload-subtitle" accept=".srt,.vtt" multiple>
   </div>
 
-  <!-- Library -->
+  <!-- Library Pendukung -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/dashjs/dist/dash.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flv.js/dist/flv.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.polyfilled.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/webrtc-adapter"></script>
+  
+  <!-- Script Kustom -->
   <script src="script.js"></script>
 </body>
 </html>
