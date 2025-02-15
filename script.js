@@ -3,13 +3,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadStreamBtn = document.getElementById('load-stream');
   const subtitleInput = document.getElementById('upload-subtitle');
   const videoUrlInput = document.getElementById('video-url');
-  const skipBackBtn = document.getElementById('skip-back');
-  const skipForwardBtn = document.getElementById('skip-forward');
 
   let player = null;
   let currentHls = null;
   let currentDash = null;
   let peerConnection = null;
+
+  // Fungsi untuk skip waktu 
+  function skipTime(seconds) {
+    video.currentTime += seconds;
+  }
+
+  // Inisialisasi Plyr dengan kontrol kustom
+  function initPlyr() {
+    if (player) player.destroy();
+
+    // Tambahkan kontrol kustom
+    player = new Plyr(video, {
+      captions: { active: true, update: true, language: 'auto' },
+      controls: [
+        'play',
+        'rewind', 
+        'play',
+        'fast-forward', 
+        'progress',
+        'current-time',
+        'duration',
+        'mute',
+        'captions',
+        'settings',
+        'fullscreen'
+      ],
+      listeners: {
+        rewind: () => skipTime(-10), 
+        fastForward: () => skipTime(10), 
+      }
+    });
+  }
 
   // Deteksi tipe stream
   function detectStreamType(url) {
@@ -31,33 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeMap[protocol]) return typeMap[protocol];
     return typeMap[extension] || 'hls';
   }
-
-  // Fungsi skip waktu
-  function skipTime(seconds) {
-    video.currentTime += seconds;
-  }
-
-  // Inisialisasi Plyr
-  function initPlyr() {
-    if (player) player.destroy();
-    player = new Plyr(video, {
-      captions: { active: true, update: true, language: 'auto' },
-      controls: [
-        'play',
-        'progress',
-        'current-time',
-        'duration',
-        'mute',
-        'captions',
-        'settings',
-        'fullscreen'
-      ]
-    });
-  }
-
-  // Event listeners untuk kontrol skip
-  skipBackBtn.addEventListener('click', () => skipTime(-10));
-  skipForwardBtn.addEventListener('click', () => skipTime(10));
 
   // Load stream utama
   loadStreamBtn.addEventListener('click', () => {
