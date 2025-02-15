@@ -7,9 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let player = null;
   let currentHls = null;
   let currentDash = null;
+  let currentFlv = null;
   let peerConnection = null;
 
-  // Fungsi untuk skip waktu 
+  // Fungsi untuk skip waktu
   function skipTime(seconds) {
     video.currentTime += seconds;
   }
@@ -18,14 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function initPlyr() {
     if (player) player.destroy();
 
-    // Tambahkan kontrol kustom
     player = new Plyr(video, {
       captions: { active: true, update: true, language: 'auto' },
       controls: [
         'play',
-        'rewind', 
+        'rewind',
         'play',
-        'fast-forward', 
+        'fast-forward',
         'progress',
         'current-time',
         'duration',
@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
         'fullscreen'
       ],
       listeners: {
-        rewind: () => skipTime(-10), 
-        fastForward: () => skipTime(10), 
+        rewind: () => skipTime(-10),
+        fastForward: () => skipTime(10)
       }
     });
   }
 
-  // Deteksi tipe stream
+  // Deteksi tipe stream berdasarkan ekstensi/protokol URL
   function detectStreamType(url) {
     const extension = url.split('.').pop().split(/[?#]/)[0].toLowerCase();
     const protocol = url.split(':')[0].toLowerCase();
@@ -52,10 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
       'mp4': 'mp4',
       'webm': 'webm',
       'flv': 'flv',
-      'srt': 'srt',
+      'rtmp': 'rtmp',
       'webrtc': 'webrtc',
-      'rtsp': 'rtsp',
-      'rtmp': 'rtmp'
+      'srt': 'srt',
+      'rtsp': 'rtsp'
     };
 
     if (typeMap[protocol]) return typeMap[protocol];
@@ -67,11 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = videoUrlInput.value;
     if (!url) return alert('Masukkan URL terlebih dahulu!');
 
-    // Bersihkan koneksi sebelumnya
+    // Bersihkan koneksi atau player sebelumnya
     if (peerConnection) {
       peerConnection.close();
       peerConnection = null;
     }
+    if (currentHls) { currentHls.destroy(); currentHls = null; }
+    if (currentDash) { currentDash.reset(); currentDash = null; }
+    if (currentFlv) { currentFlv.destroy(); currentFlv = null; }
 
     const streamType = detectStreamType(url);
     console.log(`Detected stream type: ${streamType}`);
@@ -81,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'dash': loadDASH(url); break;
       case 'mp4':
       case 'webm': loadDirect(url); break;
+      case 'flv': loadFLV(url); break;
       case 'rtmp': loadRTMP(url); break;
       case 'webrtc': loadWebRTC(url); break;
       case 'srt': loadSRT(url); break;
@@ -106,6 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
       initPlyr();
+    } else {
+      alert("HLS tidak didukung oleh browser ini.");
     }
   }
 
@@ -122,9 +128,26 @@ document.addEventListener('DOMContentLoaded', () => {
     initPlyr();
   }
 
-  // Fungsi untuk RTMP (Flash)
+  // Fungsi untuk FLV menggunakan flv.js
+  function loadFLV(url) {
+    if (flvjs.isSupported()) {
+      currentFlv = flvjs.createPlayer({
+        type: 'flv',
+        url: url,
+        isLive: true
+      });
+      currentFlv.attachMediaElement(video);
+      currentFlv.load();
+      video.play();
+      initPlyr();
+    } else {
+      alert("FLV tidak didukung oleh browser ini.");
+    }
+  }
+
+  // Fungsi untuk RTMP (butuh transmuxing ke HLS/FLV)
   function loadRTMP(url) {
-    alert('RTMP memerlukan Flash Player. Gunakan HLS atau DASH untuk streaming modern.');
+    alert('RTMP tidak didukung secara langsung oleh browser modern. Gunakan server konversi seperti Nginx-RTMP untuk mengubahnya ke HLS atau FLV.');
   }
 
   // Fungsi untuk WebRTC
@@ -140,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
       
-      console.log('Implement signaling server logic here');
+      console.log('Implementasikan logika signaling server di sini');
       initPlyr();
     } catch (error) {
       console.error('WebRTC error:', error);
@@ -149,12 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Fungsi untuk SRT
   function loadSRT(url) {
-    alert('SRT memerlukan server relay. Contoh URL: srt://example.com:1234?streamid=live');
+    alert('SRT tidak didukung langsung oleh browser. Gunakan server relay atau konversi ke HLS/DASH.');
   }
 
   // Fungsi untuk RTSP
   function loadRTSP(url) {
-    alert('RTSP memerlukan konversi server. Contoh URL: rtsp://example.com/live');
+    alert('RTSP tidak didukung langsung oleh browser. Gunakan server konversi seperti Wowza atau Nginx-RTMP untuk mengubahnya ke HLS atau DASH.');
   }
 
   // Handle upload subtitle
@@ -182,3 +205,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+      
